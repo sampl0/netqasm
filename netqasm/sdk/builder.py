@@ -1367,67 +1367,38 @@ class Builder:
         qubit_reg: operand.Register,
         params: EntRequestParams,
     ) -> None:
+        x180 = [ICmd(instruction=GenericInstr.ROT_X, operands=[qubit_reg, 16, 4])]
+
+        if get_is_using_hardware():
+            # For hardware, don't use Z-gates.
+            # Decompose Z180 into Y90, X180, -Y90
+            z180 = [
+                ICmd(instruction=GenericInstr.ROT_Y, operands=[qubit_reg, 8, 4]),
+                ICmd(instruction=GenericInstr.ROT_X, operands=[qubit_reg, 16, 4]),
+                ICmd(instruction=GenericInstr.ROT_Y, operands=[qubit_reg, 24, 4]),
+            ]
+        else:
+            z180 = [ICmd(instruction=GenericInstr.ROT_Z, operands=[qubit_reg, 16, 4])]
+
         if params.expect_phi_plus:
             with bell_state.if_eq(BellState.PHI_MINUS.value):  # Phi- -> apply Z-gate
-                correction_cmds = [
-                    ICmd(instruction=GenericInstr.ROT_Z, operands=[qubit_reg, 16, 4])
-                ]
-                self.subrt_add_pending_commands(correction_cmds)  # type: ignore
+                self.subrt_add_pending_commands(z180)  # type: ignore
             with bell_state.if_eq(BellState.PSI_PLUS.value):  # Psi+ -> apply X-gate
-                correction_cmds = [
-                    ICmd(instruction=GenericInstr.ROT_X, operands=[qubit_reg, 16, 4])
-                ]
-                self.subrt_add_pending_commands(correction_cmds)  # type: ignore
+                self.subrt_add_pending_commands(x180)  # type: ignore
             with bell_state.if_eq(
                 BellState.PSI_MINUS.value
             ):  # Psi- -> apply X-gate and Z-gate
-
-                # X gate
-                correction_cmds = [
-                    ICmd(instruction=GenericInstr.ROT_X, operands=[qubit_reg, 16, 4])
-                ]
-
-                # Z gate
-                if get_is_using_hardware():
-                    # Decompose Z180 into Y90, X180, -Y90
-                    correction_cmds += [
-                        ICmd(
-                            instruction=GenericInstr.ROT_Y, operands=[qubit_reg, 8, 4]
-                        ),
-                        ICmd(
-                            instruction=GenericInstr.ROT_X, operands=[qubit_reg, 16, 4]
-                        ),
-                        ICmd(
-                            instruction=GenericInstr.ROT_Y, operands=[qubit_reg, 24, 4]
-                        ),
-                    ]
-                else:
-                    correction_cmds += [
-                        ICmd(
-                            instruction=GenericInstr.ROT_Z, operands=[qubit_reg, 16, 4]
-                        ),
-                    ]
-                self.subrt_add_pending_commands(correction_cmds)  # type: ignore
+                self.subrt_add_pending_commands(x180 + z180)  # type: ignore
         else:
             assert params.expect_psi_plus
             with bell_state.if_eq(BellState.PHI_PLUS.value):  # Phi+ -> apply X-gate
-                correction_cmds = [
-                    ICmd(instruction=GenericInstr.ROT_X, operands=[qubit_reg, 16, 4])
-                ]
-                self.subrt_add_pending_commands(correction_cmds)  # type: ignore
+                self.subrt_add_pending_commands(x180)  # type: ignore
             with bell_state.if_eq(
                 BellState.PHI_MINUS.value
             ):  # Phi- -> apply X-gate and Z-gate
-                correction_cmds = [
-                    ICmd(instruction=GenericInstr.ROT_X, operands=[qubit_reg, 16, 4]),
-                    ICmd(instruction=GenericInstr.ROT_Z, operands=[qubit_reg, 16, 4]),
-                ]
-                self.subrt_add_pending_commands(correction_cmds)  # type: ignore
+                self.subrt_add_pending_commands(x180 + z180)  # type: ignore
             with bell_state.if_eq(BellState.PSI_MINUS.value):  # Psi- -> apply Z-gate
-                correction_cmds = [
-                    ICmd(instruction=GenericInstr.ROT_Z, operands=[qubit_reg, 16, 4]),
-                ]
-                self.subrt_add_pending_commands(correction_cmds)  # type: ignore
+                self.subrt_add_pending_commands(z180)  # type: ignore
 
     def _build_cmds_epr_keep_corrections(
         self, qubit_ids_array: Array, ent_results_array: Array, params: EntRequestParams
