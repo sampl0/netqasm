@@ -38,6 +38,7 @@ from netqasm.lang.parsing.text import assemble_subroutine, parse_register
 from netqasm.lang.subroutine import Subroutine
 from netqasm.lang.version import NETQASM_VERSION
 from netqasm.qlink_compat import BellState, EPRRole, EPRType, LinkLayerOKTypeK
+from netqasm.runtime.settings import get_is_using_hardware
 from netqasm.sdk.build_epr import (
     SER_RESPONSE_KEEP_IDX_BELL_STATE,
     SER_RESPONSE_KEEP_LEN,
@@ -1380,14 +1381,32 @@ class Builder:
             with bell_state.if_eq(
                 BellState.PSI_MINUS.value
             ):  # Psi- -> apply X-gate and Z-gate
+
+                # X gate
                 correction_cmds = [
-                    ICmd(instruction=GenericInstr.ROT_X, operands=[qubit_reg, 16, 4]),
-                    # ICmd(instruction=GenericInstr.ROT_Z, operands=[qubit_reg, 16, 4]),
-                    # Decompose Z180 into Y90, X180, -Y90
-                    ICmd(instruction=GenericInstr.ROT_Y, operands=[qubit_reg, 8, 4]),
-                    ICmd(instruction=GenericInstr.ROT_X, operands=[qubit_reg, 16, 4]),
-                    ICmd(instruction=GenericInstr.ROT_Y, operands=[qubit_reg, 24, 4]),
+                    ICmd(instruction=GenericInstr.ROT_X, operands=[qubit_reg, 16, 4])
                 ]
+
+                # Z gate
+                if get_is_using_hardware():
+                    # Decompose Z180 into Y90, X180, -Y90
+                    correction_cmds += [
+                        ICmd(
+                            instruction=GenericInstr.ROT_Y, operands=[qubit_reg, 8, 4]
+                        ),
+                        ICmd(
+                            instruction=GenericInstr.ROT_X, operands=[qubit_reg, 16, 4]
+                        ),
+                        ICmd(
+                            instruction=GenericInstr.ROT_Y, operands=[qubit_reg, 24, 4]
+                        ),
+                    ]
+                else:
+                    correction_cmds += [
+                        ICmd(
+                            instruction=GenericInstr.ROT_Z, operands=[qubit_reg, 16, 4]
+                        ),
+                    ]
                 self.subrt_add_pending_commands(correction_cmds)  # type: ignore
         else:
             assert params.expect_psi_plus
