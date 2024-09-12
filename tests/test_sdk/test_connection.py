@@ -253,7 +253,7 @@ set R6 10
 wait_all @0[R5:R6]
 set R2 0
 set R5 1
-beq R2 R5 42
+beq R2 R5 44
 load R0 @1[R2]
 set R3 9
 set R4 0
@@ -272,9 +272,11 @@ set R5 1
 bne R1 R5 35
 rot_x R0 16 4
 set R5 2
-bne R1 R5 39
+bne R1 R5 41
 rot_x R0 16 4
-rot_z R0 16 4
+rot_y R0 8 4
+rot_x R0 16 4
+rot_y R0 24 4
 set R5 1
 add R2 R2 R5
 jmp 16
@@ -282,7 +284,6 @@ set Q0 0
 h Q0
 ret_arr @0
 ret_arr @1
-ret_arr @2
 """
 
     expected = parse_text_subroutine(expected_text)
@@ -402,7 +403,7 @@ set R6 20
 wait_all @0[R5:R6]
 set R2 0
 set R5 2
-beq R2 R5 45
+beq R2 R5 47
 load R0 @1[R2]
 set R3 9
 set R4 0
@@ -421,9 +422,11 @@ set R5 1
 bne R1 R5 38
 rot_x R0 16 4
 set R5 2
-bne R1 R5 42
+bne R1 R5 44
 rot_x R0 16 4
-rot_z R0 16 4
+rot_y R0 8 4
+rot_x R0 16 4
+rot_y R0 24 4
 set R5 1
 add R2 R2 R5
 jmp 19
@@ -433,7 +436,6 @@ set Q0 1
 h Q0
 ret_arr @0
 ret_arr @1
-ret_arr @2
     """
 
     expected = parse_text_subroutine(expected_text)
@@ -719,7 +721,7 @@ set R6 10
 wait_all @0[R5:R6]
 set R2 0
 set R5 1
-beq R2 R5 42
+beq R2 R5 44
 load R0 @1[R2]
 set R3 9
 set R4 0
@@ -738,9 +740,11 @@ set R5 1
 bne R1 R5 35
 rot_x R0 16 4
 set R5 2
-bne R1 R5 39
+bne R1 R5 41
 rot_x R0 16 4
-rot_z R0 16 4
+rot_y R0 8 4
+rot_x R0 16 4
+rot_y R0 24 4
 set R5 1
 add R2 R2 R5
 jmp 16

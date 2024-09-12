@@ -681,8 +681,10 @@ class EPRSocket(abc.ABC):
 
         if self.conn is None:
             raise RuntimeError("EPRSocket does not have an open connection")
-        
-        assert not (expect_phi_plus and expect_psi_plus), "cannot ask for both phi+ and psi+"
+
+        assert not (
+            expect_phi_plus and expect_psi_plus
+        ), "cannot ask for both phi+ and psi+"
 
         qubits, _ = self.conn._builder.sdk_recv_epr_keep(
             params=EntRequestParams(
