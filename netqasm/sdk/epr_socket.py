@@ -644,6 +644,7 @@ class EPRSocket(abc.ABC):
         post_routine: Optional[Callable] = None,
         sequential: bool = False,
         expect_phi_plus: bool = True,
+        expect_psi_plus: bool = False,
         min_fidelity_all_at_end: Optional[int] = None,
         max_tries: Optional[int] = None,
     ) -> List[Qubit]:
@@ -681,6 +682,10 @@ class EPRSocket(abc.ABC):
         if self.conn is None:
             raise RuntimeError("EPRSocket does not have an open connection")
 
+        assert not (
+            expect_phi_plus and expect_psi_plus
+        ), "cannot ask for both phi+ and psi+"
+
         qubits, _ = self.conn._builder.sdk_recv_epr_keep(
             params=EntRequestParams(
                 remote_node_id=self.remote_node_id,
@@ -689,6 +694,7 @@ class EPRSocket(abc.ABC):
                 post_routine=post_routine,
                 sequential=sequential,
                 expect_phi_plus=expect_phi_plus,
+                expect_psi_plus=expect_psi_plus,
                 min_fidelity_all_at_end=min_fidelity_all_at_end,
                 max_tries=max_tries,
             ),

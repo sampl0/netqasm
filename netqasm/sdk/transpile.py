@@ -580,7 +580,7 @@ class NVSubroutineTranspiler(SubroutineTranspiler):
                 ),
             ]
         elif isinstance(instr, vanilla.RotZInstruction):
-            if get_is_using_hardware():
+            if get_is_using_hardware() and instr.angle_denom.value != 4:
                 imm0, imm1 = get_hardware_num_denom(instr)
             else:
                 imm0, imm1 = instr.angle_num, instr.angle_denom
@@ -590,7 +590,7 @@ class NVSubroutineTranspiler(SubroutineTranspiler):
                 ),
             ]
         elif isinstance(instr, vanilla.RotXInstruction):
-            if get_is_using_hardware():
+            if get_is_using_hardware() and instr.angle_denom.value != 4:
                 imm0, imm1 = get_hardware_num_denom(instr)
             else:
                 imm0, imm1 = instr.angle_num, instr.angle_denom
@@ -600,7 +600,7 @@ class NVSubroutineTranspiler(SubroutineTranspiler):
                 ),
             ]
         elif isinstance(instr, vanilla.RotYInstruction):
-            if get_is_using_hardware():
+            if get_is_using_hardware() and instr.angle_denom.value != 4:
                 imm0, imm1 = get_hardware_num_denom(instr)
             else:
                 imm0, imm1 = instr.angle_num, instr.angle_denom
