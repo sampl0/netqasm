@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+2024-09-13 (1.0.0)
+-------------------
+- Fix bell state corrections when compiling for hardware
+
 2024-03-20 (0.16.0)
 -------------------
 - Added the REIDS flavour.
