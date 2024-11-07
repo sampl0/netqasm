@@ -535,7 +535,7 @@ for instr in [
     for index in [2, 3]:
         _REPLACE_CONSTANTS_EXCEPTION.append((instr, index))
 
-for index in [2, 3, 4, 5]:
+for index in [2, 3, 4, 5, 6]:
     _REPLACE_CONSTANTS_EXCEPTION.append((GenericInstr.MEAS_BASIS, index))
 
 
