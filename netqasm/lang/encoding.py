@@ -38,7 +38,7 @@ REG_NAME_BITS = 2
 # Num bits in register index
 REG_INDEX_BITS = 4
 
-COMMAND_BYTES = 8
+COMMAND_BYTES = 7
 
 PADDING_FIELD = "padding"
 
@@ -192,7 +192,7 @@ class RegRegImmImmCommand(Command):
     )
 
 
-class RegRegImm5Command(Command):
+class RegRegImm4Command(Command):
     _fields_ = add_padding(
         [
             ("reg0", Register),
@@ -201,7 +201,6 @@ class RegRegImm5Command(Command):
             ("imm1", IMMEDIATE),
             ("imm2", IMMEDIATE),
             ("imm3", IMMEDIATE),
-            ("imm4", IMMEDIATE),
         ]
     )
 
@@ -351,7 +350,7 @@ COMMANDS = [
     MeasCommand,
     RegImmImmCommand,
     RegRegImmImmCommand,
-    RegRegImm5Command,
+    RegRegImm4Command,
     RegRegRegCommand,
     ImmCommand,
     ImmImmCommand,

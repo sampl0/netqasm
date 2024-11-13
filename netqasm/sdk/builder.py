@@ -63,7 +63,7 @@ from netqasm.sdk.config import LogConfig
 from netqasm.sdk.constraint import SdkConstraint, ValueAtMostConstraint
 from netqasm.sdk.futures import Array, Future, RegFuture, T_CValue
 from netqasm.sdk.memmgr import MemoryManager
-from netqasm.sdk.qubit import FutureQubit, Qubit, QubitMeasureAxes, QubitMeasureBasis
+from netqasm.sdk.qubit import FutureQubit, Qubit, QubitMeasureBasis
 from netqasm.sdk.toolbox import get_angle_spec_from_float
 from netqasm.sdk.transpile import NVSubroutineTranspiler, SubroutineTranspiler
 from netqasm.typedefs import T_Cmd
@@ -1131,7 +1131,6 @@ class Builder:
         inplace: bool,
         basis: QubitMeasureBasis = QubitMeasureBasis.Z,
         rotations: Optional[Tuple[int, int, int]] = None,
-        axes: QubitMeasureAxes = QubitMeasureAxes.XYX,
     ) -> None:
         if isinstance(self._hardware_config, NVHardwareConfig):
             # If compiling for NV, only virtual ID 0 can be used to measure a qubit.
@@ -1147,48 +1146,20 @@ class Builder:
         denom = 4
 
         if rotations is not None:
-            first, second, third = rotations
+            x1, y, x2 = rotations
             meas_command = ICmd(
                 instruction=GenericInstr.MEAS_BASIS,
-                operands=[qubit_reg, outcome_reg, first, second, third, denom, axes],
+                operands=[qubit_reg, outcome_reg, x1, y, x2, denom],
             )
         elif basis == QubitMeasureBasis.X:
-            first, second, third = {
-                QubitMeasureAxes.XYX: (0, 24, 0),
-                QubitMeasureAxes.YZY: (24, 0, 0),
-                QubitMeasureAxes.ZXZ: (24, 24, 8),
-            }[axes]
-
             meas_command = ICmd(
                 instruction=GenericInstr.MEAS_BASIS,
-                operands=[
-                    qubit_reg,
-                    outcome_reg,
-                    first,
-                    second,
-                    third,
-                    denom,
-                    axes,
-                ],  # -pi/2 Y rotation
+                operands=[qubit_reg, outcome_reg, 0, 24, 0, denom],  # -pi/2 Y rotation
             )
         elif basis == QubitMeasureBasis.Y:
-            first, second, third = {
-                QubitMeasureAxes.XYX: (8, 0, 0),
-                QubitMeasureAxes.YZY: (8, 24, 24),
-                QubitMeasureAxes.ZXZ: (0, 8, 0),
-            }[axes]
-
             meas_command = ICmd(
                 instruction=GenericInstr.MEAS_BASIS,
-                operands=[
-                    qubit_reg,
-                    outcome_reg,
-                    first,
-                    second,
-                    third,
-                    denom,
-                    axes,
-                ],  # pi/2 X rotation
+                operands=[qubit_reg, outcome_reg, 8, 0, 0, denom],  # pi/2 X rotation
             )
         else:
             meas_command = ICmd(
@@ -1927,6 +1898,8 @@ class Builder:
             wait_all = False
         else:
             wait_all = True
+
+        self._connection._logger.info(f"wait_all = {wait_all}")
 
         if reset_results_array:
             self._build_cmds_undefine_array(ent_results_array)

@@ -86,7 +86,7 @@ qfree Q0
 
 def test_deserialize_subroutine():
     metadata = b"\x00\x00\x00\x00"
-    cphase_gate = b"\x1F\x00\x00\x00\x00\x00\x00\x00"
+    cphase_gate = b"\x1F\x00\x00\x00\x00\x00\x00"
     raw = bytes(metadata + cphase_gate)
     print(raw)
     subroutine = deserialize(raw)

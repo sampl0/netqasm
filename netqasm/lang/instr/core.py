@@ -455,7 +455,7 @@ class MeasInstruction(base.RegRegInstruction):
 
 
 @dataclass
-class MeasBasisInstruction(base.RegRegImm5Instruction):
+class MeasBasisInstruction(base.RegRegImm4Instruction):
     id: int = 41
     mnemonic: str = "meas_basis"
 
@@ -509,14 +509,6 @@ class MeasBasisInstruction(base.RegRegImm5Instruction):
     @angle_denom.setter
     def angle_denom(self, new_val: Immediate):
         self.imm3 = new_val
-
-    @property
-    def rotation_axes(self):
-        return self.imm4
-
-    @rotation_axes.setter
-    def rotation_axes(self, new_val: Immediate):
-        self.imm4 = new_val
 
 
 @dataclass
