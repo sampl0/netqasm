@@ -1928,8 +1928,6 @@ class Builder:
         else:
             wait_all = True
 
-        self._connection._logger.info(f"wait_all = {wait_all}")
-
         if reset_results_array:
             self._build_cmds_undefine_array(ent_results_array)
 
