@@ -286,9 +286,9 @@ class RegRegImmImmInstruction(NetQASMInstruction):
 
 
 @dataclass
-class RegRegImm5Instruction(NetQASMInstruction):
+class RegRegImm4Instruction(NetQASMInstruction):
     """
-    An instruction with 2 Register operands followed by 5 Immediate operands.
+    An instruction with 2 Register operands followed by 4 Immediate operands.
     """
 
     reg0: Register = None  # type: ignore
@@ -297,23 +297,14 @@ class RegRegImm5Instruction(NetQASMInstruction):
     imm1: Immediate = None  # type: ignore
     imm2: Immediate = None  # type: ignore
     imm3: Immediate = None  # type: ignore
-    imm4: Immediate = None  # type: ignore
 
     @property
     def operands(self) -> List[Operand]:
-        return [
-            self.reg0,
-            self.reg1,
-            self.imm0,
-            self.imm1,
-            self.imm2,
-            self.imm3,
-            self.imm4,
-        ]
+        return [self.reg0, self.reg1, self.imm0, self.imm1, self.imm2, self.imm3]
 
     @classmethod
     def deserialize_from(cls, raw: bytes):
-        c_struct = encoding.RegRegImm5Command.from_buffer_copy(raw)
+        c_struct = encoding.RegRegImm4Command.from_buffer_copy(raw)
         assert c_struct.id == cls.id
         reg0 = Register.from_raw(c_struct.reg0)
         reg1 = Register.from_raw(c_struct.reg1)
@@ -321,13 +312,10 @@ class RegRegImm5Instruction(NetQASMInstruction):
         imm1 = Immediate(value=c_struct.imm1)
         imm2 = Immediate(value=c_struct.imm2)
         imm3 = Immediate(value=c_struct.imm3)
-        imm4 = Immediate(value=c_struct.imm4)
-        return cls(
-            reg0=reg0, reg1=reg1, imm0=imm0, imm1=imm1, imm2=imm2, imm3=imm3, imm4=imm4
-        )
+        return cls(reg0=reg0, reg1=reg1, imm0=imm0, imm1=imm1, imm2=imm2, imm3=imm3)
 
     def serialize(self) -> bytes:
-        c_struct = encoding.RegRegImm5Command(
+        c_struct = encoding.RegRegImm4Command(
             id=self.id,
             reg0=self.reg0.cstruct,
             reg1=self.reg1.cstruct,
@@ -335,14 +323,13 @@ class RegRegImm5Instruction(NetQASMInstruction):
             imm1=self.imm1.value,
             imm2=self.imm2.value,
             imm3=self.imm3.value,
-            imm4=self.imm4.value,
         )
         return bytes(c_struct)
 
     @classmethod
     def from_operands(cls, operands: List[Union[Operand, int]]):
-        assert len(operands) == 7
-        reg0, reg1, imm0, imm1, imm2, imm3, imm4 = operands
+        assert len(operands) == 6
+        reg0, reg1, imm0, imm1, imm2, imm3 = operands
         assert isinstance(reg0, Register)
         assert isinstance(reg1, Register)
         assert isinstance(imm0, int) or isinstance(imm0, Immediate)
@@ -357,17 +344,12 @@ class RegRegImm5Instruction(NetQASMInstruction):
         assert isinstance(imm3, int) or isinstance(imm3, Immediate)
         if isinstance(imm3, int):
             imm3 = Immediate(value=imm3)
-        assert isinstance(imm4, int) or isinstance(imm4, Immediate)
-        if isinstance(imm4, int):
-            imm4 = Immediate(value=imm4)
-        return cls(
-            reg0=reg0, reg1=reg1, imm0=imm0, imm1=imm1, imm2=imm2, imm3=imm3, imm4=imm4
-        )
+        return cls(reg0=reg0, reg1=reg1, imm0=imm0, imm1=imm1, imm2=imm2, imm3=imm3)
 
     def _pretty_print(self):
         return (
             f"{self.mnemonic} {str(self.reg0)} {str(self.reg1)} {str(self.imm0)} "
-            f"{str(self.imm1)} {str(self.imm2)} {str(self.imm3)} {str(self.imm4)}"
+            f"{str(self.imm1)} {str(self.imm2)} {str(self.imm3)}"
         )
 
 
