@@ -669,3 +669,18 @@ def get_hardware_num_denom(
     denom_diff = 4 - instr.angle_denom.value
     angle_num = instr.angle_num.value * (2**denom_diff)
     return (Immediate(angle_num), Immediate(4))
+
+class ITSubroutineTranspiler(SubroutineTranspiler):
+    """A transpiler that converts a subroutine with the vanilla flavour to a subroutine
+    with the Ion Trap flavour.
+    """
+
+    def __init__(self, subroutine: Subroutine, debug=False):
+        self._subroutine: Subroutine = subroutine
+        self._used_registers: Set[Register] = set()
+        self._register_values: Dict[Register, Immediate] = dict()
+        self._debug: bool = debug
+
+    def get_reg_value(self, reg: Register) -> Immediate:
+        """Get the value of a register at this moment"""
+        return self._register_values[reg]
