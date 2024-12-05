@@ -862,10 +862,6 @@ class ITSubroutineTranspiler(SubroutineTranspiler):
             
             
             ]
-            
-            
-            
-            
     
     def _handle_two_qubit_gate(
         self, instr: core.TwoQubitInstruction
@@ -914,7 +910,6 @@ class ITSubroutineTranspiler(SubroutineTranspiler):
                  ┌─────────┐┌───────┐
             q_0: ┤ Ry(π/2) ├┤ Rx(π) ├
                  └─────────┘└───────┘
-            q_1: ────────────────────
             Source: Qiskit transpiler
             """
             return [
@@ -922,91 +917,51 @@ class ITSubroutineTranspiler(SubroutineTranspiler):
                 trapped_ion_ionq.GPi2Instruction(),
             ]
         elif isinstance(instr, vanilla.GateKInstruction):
+            """
+               ┌──────────┐┌───────┐
+            q: ┤ Rx(-π/2) ├┤ Ry(π) ├
+               └──────────┘└───────┘
+            Source: Qiskit transpiler
+            """
             return [
-                nv.RotXInstruction(
-                    lineno=instr.lineno,
-                    reg=instr.reg,
-                    imm0=Immediate(24),
-                    imm1=Immediate(4),
-                ),
-                nv.RotYInstruction(
-                    lineno=instr.lineno,
-                    reg=instr.reg,
-                    imm0=Immediate(16),
-                    imm1=Immediate(4),
-                ),
+                trapped_ion_ionq.GPi2Instruction(),
+                trapped_ion_ionq.GPi2Instruction(),
             ]
         elif isinstance(instr, vanilla.GateSInstruction):
+            """
+               ┌──────────┐┌─────────┐┌─────────┐
+            q: ┤ Rx(-π/2) ├┤ Ry(π/2) ├┤ Rx(π/2) ├
+               └──────────┘└─────────┘└─────────┘
+            Source: Qiskit transpiler
+            """
             return [
-                nv.RotXInstruction(
-                    lineno=instr.lineno,
-                    reg=instr.reg,
-                    imm0=Immediate(24),
-                    imm1=Immediate(4),
-                ),
-                nv.RotYInstruction(
-                    lineno=instr.lineno,
-                    reg=instr.reg,
-                    imm0=Immediate(24),
-                    imm1=Immediate(4),
-                ),
-                nv.RotXInstruction(
-                    lineno=instr.lineno,
-                    reg=instr.reg,
-                    imm0=Immediate(8),
-                    imm1=Immediate(4),
-                ),
+                trapped_ion_ionq.GPi2Instruction(),
+                trapped_ion_ionq.GPi2Instruction(),
+                trapped_ion_ionq.GPi2Instruction(),
             ]
         elif isinstance(instr, vanilla.GateTInstruction):
+            """
+               ┌──────────┐┌─────────┐┌─────────┐
+            q: ┤ Rx(-π/2) ├┤ Ry(π/4) ├┤ Rx(π/2) ├
+               └──────────┘└─────────┘└─────────┘
+            Source: Qiskit transpiler
+            """
             return [
-                nv.RotXInstruction(
-                    lineno=instr.lineno,
-                    reg=instr.reg,
-                    imm0=Immediate(24),
-                    imm1=Immediate(4),
-                ),
-                nv.RotYInstruction(
-                    lineno=instr.lineno,
-                    reg=instr.reg,
-                    imm0=Immediate(28),
-                    imm1=Immediate(4),
-                ),
-                nv.RotXInstruction(
-                    lineno=instr.lineno,
-                    reg=instr.reg,
-                    imm0=Immediate(8),
-                    imm1=Immediate(4),
-                ),
+                trapped_ion_ionq.GPi2Instruction(),
+                trapped_ion_ionq.GPi2Instruction(),
+                trapped_ion_ionq.GPi2Instruction(),
             ]
         elif isinstance(instr, vanilla.RotZInstruction):
-            if get_is_using_hardware() and instr.angle_denom.value != 4:
-                imm0, imm1 = get_hardware_num_denom(instr)
-            else:
-                imm0, imm1 = instr.angle_num, instr.angle_denom
             return [
-                nv.RotZInstruction(
-                    lineno=instr.lineno, reg=instr.reg, imm0=imm0, imm1=imm1
-                ),
+                trapped_ion_ionq.VirtualZInstruction()
             ]
         elif isinstance(instr, vanilla.RotXInstruction):
-            if get_is_using_hardware() and instr.angle_denom.value != 4:
-                imm0, imm1 = get_hardware_num_denom(instr)
-            else:
-                imm0, imm1 = instr.angle_num, instr.angle_denom
             return [
-                nv.RotXInstruction(
-                    lineno=instr.lineno, reg=instr.reg, imm0=imm0, imm1=imm1
-                ),
+                trapped_ion_ionq.GPi2Instruction(),
             ]
         elif isinstance(instr, vanilla.RotYInstruction):
-            if get_is_using_hardware() and instr.angle_denom.value != 4:
-                imm0, imm1 = get_hardware_num_denom(instr)
-            else:
-                imm0, imm1 = instr.angle_num, instr.angle_denom
             return [
-                nv.RotYInstruction(
-                    lineno=instr.lineno, reg=instr.reg, imm0=imm0, imm1=imm1
-                ),
+                trapped_ion_ionq.GPi2Instruction(),
             ]
         else:
             raise ValueError(
