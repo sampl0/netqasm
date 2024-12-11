@@ -11,14 +11,14 @@ def k_gate_matrix_based(qc, qubit):
     qc.append(Operator(Y), [qubit])
 
 # Create the quantum circuit
-qc = QuantumCircuit(1)
-k_gate_matrix_based(qc,0)  # Controlled Phase gate
+qc = QuantumCircuit(2)
+qc.h(0)  # Controlled Phase gate
 print("Original Circuit:")
 print(qc)
 
 
 
-basis_gates = ["rxx", "ryy", "rxy", "zz" "rz", "rx", "ry", "x", "y"]
+basis_gates = ["ry","x","y", "rx","cx"]
 
 # Define a pass manager to optimize the circuit
 pass_manager = PassManager([
