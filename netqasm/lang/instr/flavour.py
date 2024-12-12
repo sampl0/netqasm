@@ -119,12 +119,10 @@ class IONQFlavour(Flavour):
         return[
             trapped_ion_ionq.AllQubitsInitInstruction,
             trapped_ion_ionq.AllQubitsMeasInstruction,
-            trapped_ion_ionq.GPiInstruction,
-            trapped_ion_ionq.GPiInstruction2,
-            trapped_ion_ionq.VirtualZInstruction,
+            trapped_ion_ionq.RotXInstruction,
+            trapped_ion_ionq.RotYInstruction,
+            trapped_ion_ionq.RotZInstruction,
             trapped_ion_ionq.MSInstruction,
-            trapped_ion_ionq.PartialMSInstruction,
-            trapped_ion_ionq.ZZInstruction,
         ]
     
     def __init__(self):

@@ -82,6 +82,9 @@ class GenericInstr(Enum):
     # Breakpoint
     BREAKPOINT = auto()
 
+    # Two-qubit gate for ion traps
+    MS = auto()
+
 
 class BreakpointAction(Enum):
     NOP = 0

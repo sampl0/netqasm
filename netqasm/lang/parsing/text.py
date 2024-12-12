@@ -531,6 +531,7 @@ for instr in [
     GenericInstr.CROT_X,
     GenericInstr.CROT_Y,
     GenericInstr.CROT_Z,
+    GenericInstr.MS,
 ]:
     for index in [2, 3]:
         _REPLACE_CONSTANTS_EXCEPTION.append((instr, index))
