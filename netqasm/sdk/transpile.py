@@ -774,93 +774,104 @@ class ITSubroutineTranspiler(SubroutineTranspiler):
         self._subroutine.instructions = new_commands
         return self._subroutine
     
-   
-
-
     def _map_cnot(self,
         instr: vanilla.CnotInstruction,
     ) -> List[NetQASMInstruction]:
         """
-        See https://docs.ionq.com/guides/getting-started-with-native-gates for the circuit
+        ----@-----   ----| RY(π/2) |----|         |----| RX(-π/2) |----| RY(-π/2) |-----
+            |      =                    | XX(π/4) |
+        ----X-----   -------------------|         |----| RX(-π/2) |---------------------
+        Source: https://docs.ionq.com/guides/getting-started-with-native-gates
         """
         # instr.reg0: control
         # instr.reg1: target
        
         return [
-            # imm0: angle_num
-            # imm1: angle_denom
-            trapped_ion_ionq.GPi2Instruction(
+            # RY(π/2)
+            trapped_ion_ionq.RY(
                 lineno=instr.lineno, 
                 reg=instr.reg0,
-                imm0=np.pi, 
-                imm1=2),
-            # imm0: rotation 1st qubit
-            # imm1: rotation 2st qubit
-            trapped_ion_ionq.MSInstruction(
+                imm0=Immediate(2), 
+                imm1=Immediate(2)),
+            # XX(π/4)
+            trapped_ion_ionq.XX(
                 lineno=instr.lineno, 
                 reg0=instr.reg0,
                 reg1=instr.reg1,
-                imm0=(np.pi/2), 
-                imm1=(np.pi/2)
-            ),
-            # imm0: angle_num
-            # imm1: angle_denom
-            trapped_ion_ionq.GPi2Instruction(
+                imm0=Immediate(4), 
+                imm1=Immediate(4)),
+            # RX(-π/2)
+            trapped_ion_ionq.RX(
                 lineno=instr.lineno, 
                 reg=instr.reg0,
-                imm0=-np.pi),
-            trapped_ion_ionq.GPi2Instruction(
+                imm0=Immediate(24), 
+                imm1=Immediate(4)),
+            # RX(-π/2)
+            trapped_ion_ionq.XX(
                 lineno=instr.lineno, 
                 reg=instr.reg1,
-                imm0=-np.pi),
-            trapped_ion_ionq.GPi2Instruction(
+                imm0=Immediate(24), 
+                imm1=Immediate(4)),
+            # RY(-π/2): GPi2(-π/2)
+            trapped_ion_ionq.RY(
                 lineno=instr.lineno, 
                 reg=instr.reg0,
-                imm0=-np.pi, 
-                imm1=2),
+                imm0=Immediate(24), 
+                imm1=Immediate(4)),
             ]
         
     def _map_cpahse(self,
-        instr: vanilla.CnotInstruction,
+        instr: vanilla.CphaseInstruction,
     ) -> List[NetQASMInstruction]:
         # instr.reg0: control
         # instr.reg1: target
         """
-             ┌─────────┐┌──────────┐┌───────────┐┌──────────┐            ┌───────────┐ ┌──────────┐┌──────────┐
-        q_0: ┤ Ry(π/2) ├┤ Rx(π/2n) ├┤0          ├┤ Rx(-π/2) ├────────────┤0          ├─┤ Rx(-π/2) ├┤ Ry(-π/2) ├
-             └─────────┘└──────────┘│  Rxx(π/2) │├──────────┤┌──────────┐│  Rxx(π/2) │┌┴──────────┤├──────────┤
-        q_1: ───────────────────────┤1          ├┤ Ry(π/2n) ├┤ Rx(-π/2) ├┤1          ├┤ Ry(-π/2n) ├┤ Rx(-π/2) ├
-                                    └───────────┘└──────────┘└──────────┘└───────────┘└───────────┘└──────────┘
-        Soruce: Qiskit transpile
+        ----@-----   ----| RY(π/2) |----|         |----| RX(-π/2) |----| RY(-π/2) |-----
+            |      =                    | XX(π/4) |
+        ----X-----   ----| RY(π/2) |----|         |----| RX(-π/2) |----| RY(-π/2) |-----
+        Soruce: Basic circuit compilation techniques for an ion-trap quantum machine. Dmitri Maslov
         """
-       
         return [
-            # imm0: angle_num
-            # imm1: angle_denom
-            trapped_ion_ionq.GPi2Instruction(
+            # RY(π/2)
+            trapped_ion_ionq.RY(
                 lineno=instr.lineno, 
                 reg=instr.reg0,
-                imm0=np.pi, 
-                imm1=2),
-            trapped_ion_ionq.GPi2Instruction(
+                imm0=Immediate(2), 
+                imm1=Immediate(2)),
+            trapped_ion_ionq.RY(
                 lineno=instr.lineno, 
-                reg=instr.reg0,
-                imm0=np.pi),
-            # imm0: rotation 1st qubit
-            # imm1: rotation 2st qubit
-            trapped_ion_ionq.MSInstruction(
+                reg=instr.reg1,
+                imm0=Immediate(2), 
+                imm1=Immediate(2)),
+            # XX(π/4)
+            trapped_ion_ionq.XX(
                 lineno=instr.lineno, 
                 reg0=instr.reg0,
                 reg1=instr.reg1,
-                imm0=(np.pi/2), 
-                imm1=(np.pi/2)
-            ),
-            trapped_ion_ionq.GPi2Instruction(
+                imm0=Immediate(4), 
+                imm1=Immediate(4)),
+            # RX(-π/2)
+            trapped_ion_ionq.RX(
                 lineno=instr.lineno, 
                 reg=instr.reg0,
-                imm0=-np.pi),
-            
-            
+                imm0=Immediate(24), 
+                imm1=Immediate(4)),
+            trapped_ion_ionq.XX(
+                lineno=instr.lineno, 
+                reg=instr.reg1,
+                imm0=Immediate(24), 
+                imm1=Immediate(4)),
+            # RY(-π/2)
+            trapped_ion_ionq.RY(
+                lineno=instr.lineno, 
+                reg=instr.reg0,
+                imm0=Immediate(24), 
+                imm1=Immediate(4)),
+            trapped_ion_ionq.RY(
+                lineno=instr.lineno, 
+                reg=instr.reg0,
+                imm0=Immediate(24), 
+                imm1=Immediate(4)),
             ]
     
     def _handle_two_qubit_gate(
@@ -913,8 +924,18 @@ class ITSubroutineTranspiler(SubroutineTranspiler):
             Source: Qiskit transpiler
             """
             return [
-                trapped_ion_ionq.GPi2Instruction(),
-                trapped_ion_ionq.GPi2Instruction(),
+            # RY(π/2)
+            trapped_ion_ionq.RY(
+                lineno=instr.lineno, 
+                reg=instr.reg0,
+                imm0=Immediate(2), 
+                imm1=Immediate(2)),
+            # RX(π)
+            trapped_ion_ionq.RX(
+                lineno=instr.lineno, 
+                reg=instr.reg1,
+                imm0=Immediate(16), 
+                imm1=Immediate(4)),
             ]
         elif isinstance(instr, vanilla.GateKInstruction):
             """
@@ -924,8 +945,18 @@ class ITSubroutineTranspiler(SubroutineTranspiler):
             Source: Qiskit transpiler
             """
             return [
-                trapped_ion_ionq.GPi2Instruction(),
-                trapped_ion_ionq.GPi2Instruction(),
+                # RX(-π/2)
+                trapped_ion_ionq.RX(
+                lineno=instr.lineno, 
+                reg=instr.reg0,
+                imm0=Immediate(24), 
+                imm1=Immediate(4)),
+                # RY(π)
+                trapped_ion_ionq.RY(
+                lineno=instr.lineno, 
+                reg=instr.reg0,
+                imm0=Immediate(16), 
+                imm1=Immediate(4)),
             ]
         elif isinstance(instr, vanilla.GateSInstruction):
             """
@@ -935,9 +966,24 @@ class ITSubroutineTranspiler(SubroutineTranspiler):
             Source: Qiskit transpiler
             """
             return [
-                trapped_ion_ionq.GPi2Instruction(),
-                trapped_ion_ionq.GPi2Instruction(),
-                trapped_ion_ionq.GPi2Instruction(),
+                # RX(-π/2)
+                trapped_ion_ionq.RX(
+                lineno=instr.lineno, 
+                reg=instr.reg0,
+                imm0=Immediate(24), 
+                imm1=Immediate(4)),
+                # RY(π/2)
+                trapped_ion_ionq.RY(
+                lineno=instr.lineno, 
+                reg=instr.reg0,
+                imm0=Immediate(2), 
+                imm1=Immediate(2)),
+                # RX(π/2)
+                trapped_ion_ionq.RX(
+                lineno=instr.lineno, 
+                reg=instr.reg1,
+                imm0=Immediate(2), 
+                imm1=Immediate(2)),
             ]
         elif isinstance(instr, vanilla.GateTInstruction):
             """
@@ -947,9 +993,24 @@ class ITSubroutineTranspiler(SubroutineTranspiler):
             Source: Qiskit transpiler
             """
             return [
-                trapped_ion_ionq.GPi2Instruction(),
-                trapped_ion_ionq.GPi2Instruction(),
-                trapped_ion_ionq.GPi2Instruction(),
+                # RX(-π/2)
+                trapped_ion_ionq.RX(
+                lineno=instr.lineno, 
+                reg=instr.reg0,
+                imm0=Immediate(24), 
+                imm1=Immediate(4)),
+                # RY(π/4)
+                trapped_ion_ionq.RY(
+                lineno=instr.lineno, 
+                reg=instr.reg0,
+                imm0=Immediate(4), 
+                imm1=Immediate(4)),
+                # RX(π/2)
+                trapped_ion_ionq.RX(
+                lineno=instr.lineno, 
+                reg=instr.reg1,
+                imm0=Immediate(2), 
+                imm1=Immediate(2)),
             ]
         elif isinstance(instr, vanilla.RotZInstruction):
             return [
