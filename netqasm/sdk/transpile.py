@@ -788,32 +788,32 @@ class ITSubroutineTranspiler(SubroutineTranspiler):
        
         return [
             # RY(π/2)
-            trapped_ion_ionq.RY(
+            trapped_ion_ionq.RotYInstruction(
                 lineno=instr.lineno, 
                 reg=instr.reg0,
                 imm0=Immediate(2), 
                 imm1=Immediate(2)),
             # XX(π/4)
-            trapped_ion_ionq.XX(
+            trapped_ion_ionq.MSInstruction(
                 lineno=instr.lineno, 
                 reg0=instr.reg0,
                 reg1=instr.reg1,
                 imm0=Immediate(4), 
                 imm1=Immediate(4)),
             # RX(-π/2)
-            trapped_ion_ionq.RX(
+            trapped_ion_ionq.RotXInstruction(
                 lineno=instr.lineno, 
                 reg=instr.reg0,
                 imm0=Immediate(24), 
                 imm1=Immediate(4)),
             # RX(-π/2)
-            trapped_ion_ionq.XX(
+            trapped_ion_ionq.MSInstruction(
                 lineno=instr.lineno, 
                 reg=instr.reg1,
                 imm0=Immediate(24), 
                 imm1=Immediate(4)),
             # RY(-π/2): GPi2(-π/2)
-            trapped_ion_ionq.RY(
+            trapped_ion_ionq.RotYInstruction(
                 lineno=instr.lineno, 
                 reg=instr.reg0,
                 imm0=Immediate(24), 
@@ -833,41 +833,41 @@ class ITSubroutineTranspiler(SubroutineTranspiler):
         """
         return [
             # RY(π/2)
-            trapped_ion_ionq.RY(
+            trapped_ion_ionq.RotYInstruction(
                 lineno=instr.lineno, 
                 reg=instr.reg0,
                 imm0=Immediate(2), 
                 imm1=Immediate(2)),
-            trapped_ion_ionq.RY(
+            trapped_ion_ionq.RotYInstruction(
                 lineno=instr.lineno, 
                 reg=instr.reg1,
                 imm0=Immediate(2), 
                 imm1=Immediate(2)),
             # XX(π/4)
-            trapped_ion_ionq.XX(
+            trapped_ion_ionq.MSInstruction(
                 lineno=instr.lineno, 
                 reg0=instr.reg0,
                 reg1=instr.reg1,
                 imm0=Immediate(4), 
                 imm1=Immediate(4)),
             # RX(-π/2)
-            trapped_ion_ionq.RX(
+            trapped_ion_ionq.RotXInstruction(
                 lineno=instr.lineno, 
                 reg=instr.reg0,
                 imm0=Immediate(24), 
                 imm1=Immediate(4)),
-            trapped_ion_ionq.XX(
+            trapped_ion_ionq.MSInstruction(
                 lineno=instr.lineno, 
                 reg=instr.reg1,
                 imm0=Immediate(24), 
                 imm1=Immediate(4)),
             # RY(-π/2)
-            trapped_ion_ionq.RY(
+            trapped_ion_ionq.RotYInstruction(
                 lineno=instr.lineno, 
                 reg=instr.reg0,
                 imm0=Immediate(24), 
                 imm1=Immediate(4)),
-            trapped_ion_ionq.RY(
+            trapped_ion_ionq.RotYInstruction(
                 lineno=instr.lineno, 
                 reg=instr.reg0,
                 imm0=Immediate(24), 
@@ -904,17 +904,28 @@ class ITSubroutineTranspiler(SubroutineTranspiler):
         self,
         instr: Union[core.SingleQubitInstruction, core.RotationInstruction],
     ) -> List[NetQASMInstruction]:
-        if isinstance(instr, vanilla.GateXInstruction):
+        if isinstance(instr, vanilla.RotZInstruction):
             return [
-                trapped_ion_ionq.GPi2Instruction()
+                trapped_ion_ionq.GateZInstruction(lineno=instr.lineno, 
+                reg=instr.reg1,
+                imm0=Immediate(16), 
+                imm1=Immediate(4)),
             ]
-        elif isinstance(instr, vanilla.GateYInstruction):
+        elif isinstance(instr, vanilla.RotXInstruction):
             return [
-                trapped_ion_ionq.GPi2Instruction()
+                trapped_ion_ionq.GateXInstruction(
+                lineno=instr.lineno, 
+                reg=instr.reg0,
+                imm0=Immediate(16), 
+                imm1=Immediate(4)),
             ]
-        elif isinstance(instr, vanilla.GateZInstruction):
+        elif isinstance(instr, vanilla.RotYInstruction):
             return [
-                trapped_ion_ionq.VirtualZInstruction(),
+                trapped_ion_ionq.GateYInstruction(
+                lineno=instr.lineno, 
+                reg=instr.reg0,
+                imm0=Immediate(16), 
+                imm1=Immediate(4)),
             ]
         elif isinstance(instr, vanilla.GateHInstruction):
             """
@@ -925,13 +936,13 @@ class ITSubroutineTranspiler(SubroutineTranspiler):
             """
             return [
             # RY(π/2)
-            trapped_ion_ionq.RY(
+            trapped_ion_ionq.RotYInstruction(
                 lineno=instr.lineno, 
                 reg=instr.reg0,
                 imm0=Immediate(2), 
                 imm1=Immediate(2)),
             # RX(π)
-            trapped_ion_ionq.RX(
+            trapped_ion_ionq.RotXInstruction(
                 lineno=instr.lineno, 
                 reg=instr.reg1,
                 imm0=Immediate(16), 
@@ -946,13 +957,13 @@ class ITSubroutineTranspiler(SubroutineTranspiler):
             """
             return [
                 # RX(-π/2)
-                trapped_ion_ionq.RX(
+                trapped_ion_ionq.RotXInstruction(
                 lineno=instr.lineno, 
                 reg=instr.reg0,
                 imm0=Immediate(24), 
                 imm1=Immediate(4)),
                 # RY(π)
-                trapped_ion_ionq.RY(
+                trapped_ion_ionq.RotYInstruction(
                 lineno=instr.lineno, 
                 reg=instr.reg0,
                 imm0=Immediate(16), 
@@ -967,19 +978,19 @@ class ITSubroutineTranspiler(SubroutineTranspiler):
             """
             return [
                 # RX(-π/2)
-                trapped_ion_ionq.RX(
+                trapped_ion_ionq.RotXInstruction(
                 lineno=instr.lineno, 
                 reg=instr.reg0,
                 imm0=Immediate(24), 
                 imm1=Immediate(4)),
                 # RY(π/2)
-                trapped_ion_ionq.RY(
+                trapped_ion_ionq.RotYInstruction(
                 lineno=instr.lineno, 
                 reg=instr.reg0,
                 imm0=Immediate(2), 
                 imm1=Immediate(2)),
                 # RX(π/2)
-                trapped_ion_ionq.RX(
+                trapped_ion_ionq.RotXInstruction(
                 lineno=instr.lineno, 
                 reg=instr.reg1,
                 imm0=Immediate(2), 
@@ -994,35 +1005,53 @@ class ITSubroutineTranspiler(SubroutineTranspiler):
             """
             return [
                 # RX(-π/2)
-                trapped_ion_ionq.RX(
+                trapped_ion_ionq.RotXInstruction(
                 lineno=instr.lineno, 
                 reg=instr.reg0,
                 imm0=Immediate(24), 
                 imm1=Immediate(4)),
                 # RY(π/4)
-                trapped_ion_ionq.RY(
+                trapped_ion_ionq.RotYInstruction(
                 lineno=instr.lineno, 
                 reg=instr.reg0,
                 imm0=Immediate(4), 
                 imm1=Immediate(4)),
                 # RX(π/2)
-                trapped_ion_ionq.RX(
+                trapped_ion_ionq.RotXInstruction(
                 lineno=instr.lineno, 
                 reg=instr.reg1,
                 imm0=Immediate(2), 
                 imm1=Immediate(2)),
             ]
         elif isinstance(instr, vanilla.RotZInstruction):
+            if get_is_using_hardware() and instr.angle_denom.value != 4:
+                imm0, imm1 = get_hardware_num_denom(instr)
+            else:
+                imm0, imm1 = instr.angle_num, instr.angle_denom
             return [
-                trapped_ion_ionq.VirtualZInstruction()
+                trapped_ion_ionq.RotZInstruction(
+                    lineno=instr.lineno, reg=instr.reg, imm0=imm0, imm1=imm1
+                ),
             ]
         elif isinstance(instr, vanilla.RotXInstruction):
+            if get_is_using_hardware() and instr.angle_denom.value != 4:
+                imm0, imm1 = get_hardware_num_denom(instr)
+            else:
+                imm0, imm1 = instr.angle_num, instr.angle_denom
             return [
-                trapped_ion_ionq.GPi2Instruction(),
+                trapped_ion_ionq.RotXInstruction(
+                    lineno=instr.lineno, reg=instr.reg, imm0=imm0, imm1=imm1
+                ),
             ]
         elif isinstance(instr, vanilla.RotYInstruction):
+            if get_is_using_hardware() and instr.angle_denom.value != 4:
+                imm0, imm1 = get_hardware_num_denom(instr)
+            else:
+                imm0, imm1 = instr.angle_num, instr.angle_denom
             return [
-                trapped_ion_ionq.GPi2Instruction(),
+                trapped_ion_ionq.RotYInstruction(
+                    lineno=instr.lineno, reg=instr.reg, imm0=imm0, imm1=imm1
+                ),
             ]
         else:
             raise ValueError(
