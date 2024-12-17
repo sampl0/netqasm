@@ -9,18 +9,15 @@ import abc
 from typing import Dict, List, Optional, Set, Tuple, Union
 
 from netqasm.lang.instr import DebugInstruction, NetQASMInstruction, core, nv, vanilla, trapped_ion_ionq
-from netqasm.lang.instr.flavour import REIDSFlavour
 from netqasm.lang.operand import Immediate, Register, RegisterName
 from netqasm.lang.subroutine import Subroutine
 from netqasm.runtime.settings import get_is_using_hardware
 from netqasm.util.log import HostLine
 
-import numpy as np
 
 class SubroutineTranspiler(abc.ABC):
     def __init__(self, subroutine: Subroutine, debug: bool = False):
-        self._subroutine: Subroutine = subroutine
-        self._debug: bool = debug
+        pass
 
     @abc.abstractmethod
     def transpile(self) -> Subroutine:
@@ -34,9 +31,10 @@ class NVSubroutineTranspiler(SubroutineTranspiler):
     """
 
     def __init__(self, subroutine: Subroutine, debug=False):
-        super().__init__(subroutine, debug)
+        self._subroutine: Subroutine = subroutine
         self._used_registers: Set[Register] = set()
         self._register_values: Dict[Register, Immediate] = dict()
+        self._debug: bool = debug
 
     def get_reg_value(self, reg: Register) -> Immediate:
         """Get the value of a register at this moment"""
@@ -581,7 +579,7 @@ class NVSubroutineTranspiler(SubroutineTranspiler):
                 ),
             ]
         elif isinstance(instr, vanilla.RotZInstruction):
-            if get_is_using_hardware() and instr.angle_denom.value != 4:
+            if get_is_using_hardware():
                 imm0, imm1 = get_hardware_num_denom(instr)
             else:
                 imm0, imm1 = instr.angle_num, instr.angle_denom
@@ -591,7 +589,7 @@ class NVSubroutineTranspiler(SubroutineTranspiler):
                 ),
             ]
         elif isinstance(instr, vanilla.RotXInstruction):
-            if get_is_using_hardware() and instr.angle_denom.value != 4:
+            if get_is_using_hardware():
                 imm0, imm1 = get_hardware_num_denom(instr)
             else:
                 imm0, imm1 = instr.angle_num, instr.angle_denom
@@ -601,7 +599,7 @@ class NVSubroutineTranspiler(SubroutineTranspiler):
                 ),
             ]
         elif isinstance(instr, vanilla.RotYInstruction):
-            if get_is_using_hardware() and instr.angle_denom.value != 4:
+            if get_is_using_hardware():
                 imm0, imm1 = get_hardware_num_denom(instr)
             else:
                 imm0, imm1 = instr.angle_num, instr.angle_denom
@@ -616,49 +614,6 @@ class NVSubroutineTranspiler(SubroutineTranspiler):
             )
 
 
-class REIDSSubroutineTranspiler(SubroutineTranspiler):
-    """
-    A transpiler that converts a subroutine with the vanilla flavour
-    to a subroutine with the REIDS flavour.
-    """
-
-    def __init__(self, subroutine: Subroutine, debug: bool = False):
-        super().__init__(subroutine, debug)
-        self._flavour = REIDSFlavour()
-
-    def transpile(self) -> Subroutine:
-        add_no_op_at_end: bool = False
-
-        for instr in self._subroutine.instructions:
-            try:
-                self._flavour.id_map[instr.id]
-            except KeyError as e:
-                raise ValueError(
-                    f"Instruction {instr} not supported: Unsupported instruction for REIDS flavour."
-                ) from e
-
-            if (
-                isinstance(instr, core.BranchUnaryInstruction)
-                or isinstance(instr, core.BranchBinaryInstruction)
-                or isinstance(instr, core.JmpInstruction)
-            ):
-                original_line = instr.line.value
-                if original_line == len(self._subroutine.instructions):
-                    # There was a label in the original subroutine at the very end.
-                    # Since this label is now removed, we should put a "no-op"
-                    # instruction there so there is something to jump to.
-                    add_no_op_at_end = True
-
-        if add_no_op_at_end:
-            self._subroutine.instructions += [
-                core.SetInstruction(
-                    lineno=None, reg=Register(RegisterName.C, 15), imm=Immediate(1337)
-                )
-            ]
-
-        return self._subroutine
-
-
 def get_hardware_num_denom(
     instr: core.RotationInstruction,
 ) -> Tuple[Immediate, Immediate]:
@@ -670,7 +625,6 @@ def get_hardware_num_denom(
     denom_diff = 4 - instr.angle_denom.value
     angle_num = instr.angle_num.value * (2**denom_diff)
     return (Immediate(angle_num), Immediate(4))
-
 
 class ITSubroutineTranspiler(SubroutineTranspiler):
     """A transpiler that converts a subroutine with the vanilla flavour to a subroutine
@@ -807,7 +761,7 @@ class ITSubroutineTranspiler(SubroutineTranspiler):
                 imm0=Immediate(24), 
                 imm1=Immediate(4)),
             # RX(-π/2)
-            trapped_ion_ionq.MSInstruction(
+            trapped_ion_ionq.RotXInstruction(
                 lineno=instr.lineno, 
                 reg=instr.reg1,
                 imm0=Immediate(24), 
@@ -856,7 +810,7 @@ class ITSubroutineTranspiler(SubroutineTranspiler):
                 reg=instr.reg0,
                 imm0=Immediate(24), 
                 imm1=Immediate(4)),
-            trapped_ion_ionq.MSInstruction(
+            trapped_ion_ionq.RotXInstruction(
                 lineno=instr.lineno, 
                 reg=instr.reg1,
                 imm0=Immediate(24), 
@@ -900,30 +854,30 @@ class ITSubroutineTranspiler(SubroutineTranspiler):
            # TODO: Swap, not necessary at the moment
             pass
     
-    def _map_single_gate(
+    def _handle_single_qubit_gate(
         self,
         instr: Union[core.SingleQubitInstruction, core.RotationInstruction],
     ) -> List[NetQASMInstruction]:
-        if isinstance(instr, vanilla.RotZInstruction):
+        if isinstance(instr, vanilla.GateZInstruction):
             return [
-                trapped_ion_ionq.GateZInstruction(lineno=instr.lineno, 
-                reg=instr.reg1,
+                trapped_ion_ionq.RotZInstruction(lineno=instr.lineno, 
+                reg=instr.reg,
                 imm0=Immediate(16), 
                 imm1=Immediate(4)),
             ]
-        elif isinstance(instr, vanilla.RotXInstruction):
+        elif isinstance(instr, vanilla.GateXInstruction):
             return [
-                trapped_ion_ionq.GateXInstruction(
+                trapped_ion_ionq.RotXInstruction(
                 lineno=instr.lineno, 
-                reg=instr.reg0,
+                reg=instr.reg,
                 imm0=Immediate(16), 
                 imm1=Immediate(4)),
             ]
-        elif isinstance(instr, vanilla.RotYInstruction):
+        elif isinstance(instr, vanilla.GateYInstruction):
             return [
-                trapped_ion_ionq.GateYInstruction(
+                trapped_ion_ionq.RotYInstruction(
                 lineno=instr.lineno, 
-                reg=instr.reg0,
+                reg=instr.reg,
                 imm0=Immediate(16), 
                 imm1=Immediate(4)),
             ]
@@ -938,13 +892,13 @@ class ITSubroutineTranspiler(SubroutineTranspiler):
             # RY(π/2)
             trapped_ion_ionq.RotYInstruction(
                 lineno=instr.lineno, 
-                reg=instr.reg0,
+                reg=instr.reg,
                 imm0=Immediate(2), 
                 imm1=Immediate(2)),
             # RX(π)
             trapped_ion_ionq.RotXInstruction(
                 lineno=instr.lineno, 
-                reg=instr.reg1,
+                reg=instr.reg,
                 imm0=Immediate(16), 
                 imm1=Immediate(4)),
             ]
@@ -959,13 +913,13 @@ class ITSubroutineTranspiler(SubroutineTranspiler):
                 # RX(-π/2)
                 trapped_ion_ionq.RotXInstruction(
                 lineno=instr.lineno, 
-                reg=instr.reg0,
+                reg=instr.reg,
                 imm0=Immediate(24), 
                 imm1=Immediate(4)),
                 # RY(π)
                 trapped_ion_ionq.RotYInstruction(
                 lineno=instr.lineno, 
-                reg=instr.reg0,
+                reg=instr.reg,
                 imm0=Immediate(16), 
                 imm1=Immediate(4)),
             ]
@@ -980,19 +934,19 @@ class ITSubroutineTranspiler(SubroutineTranspiler):
                 # RX(-π/2)
                 trapped_ion_ionq.RotXInstruction(
                 lineno=instr.lineno, 
-                reg=instr.reg0,
+                reg=instr.reg,
                 imm0=Immediate(24), 
                 imm1=Immediate(4)),
                 # RY(π/2)
                 trapped_ion_ionq.RotYInstruction(
                 lineno=instr.lineno, 
-                reg=instr.reg0,
+                reg=instr.reg,
                 imm0=Immediate(2), 
                 imm1=Immediate(2)),
                 # RX(π/2)
                 trapped_ion_ionq.RotXInstruction(
                 lineno=instr.lineno, 
-                reg=instr.reg1,
+                reg=instr.reg,
                 imm0=Immediate(2), 
                 imm1=Immediate(2)),
             ]
@@ -1007,19 +961,19 @@ class ITSubroutineTranspiler(SubroutineTranspiler):
                 # RX(-π/2)
                 trapped_ion_ionq.RotXInstruction(
                 lineno=instr.lineno, 
-                reg=instr.reg0,
+                reg=instr.reg,
                 imm0=Immediate(24), 
                 imm1=Immediate(4)),
                 # RY(π/4)
                 trapped_ion_ionq.RotYInstruction(
                 lineno=instr.lineno, 
-                reg=instr.reg0,
+                reg=instr.reg,
                 imm0=Immediate(4), 
                 imm1=Immediate(4)),
                 # RX(π/2)
                 trapped_ion_ionq.RotXInstruction(
                 lineno=instr.lineno, 
-                reg=instr.reg1,
+                reg=instr.reg,
                 imm0=Immediate(2), 
                 imm1=Immediate(2)),
             ]
